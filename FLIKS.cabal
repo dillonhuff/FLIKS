@@ -17,11 +17,11 @@ cabal-version:       >=1.8
 executable FLIKS
   main-is:             Main.hs
   -- other-modules:       
-  build-depends:       base ==4.6.*
+  build-depends:       base ==4.6.*, parsec
   hs-source-dirs:      src
 
 executable FLIKS-tests
   main-is:             Main.hs
   -- other-modules:       
-  build-depends:       base ==4.6.*
+  build-depends:       base ==4.6.*, HUnit, parsec
   hs-source-dirs:      test, src

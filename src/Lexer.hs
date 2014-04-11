@@ -1,11 +1,11 @@
 module Lexer(
 	PosTok(PT), tok, pos, dummyPosTok,
-	num, bool,
+	varVal, boolVal, floatVal, intVal, infixOperator,
 	lexer,
+	isIntTok, isVarTok, isBoolTok, isFloatTok, isCharTok,
 	Tok(Var, IntTok, BoolTok, FloatTok, DEF, LET, EQUAL,
 		IN, IF, THEN, ELSE, NIL, LPAREN,
-		RPAREN, LAMBDA, DOT, CharTok),
-	isIntTok, isVarTok, isBoolTok) where
+		RPAREN, LAMBDA, DOT, CharTok)) where
 
 import ErrorHandling
 import Text.Parsec.Pos
@@ -27,6 +27,18 @@ pos (PT _ p) = p
 
 dummyPosTok :: Tok -> PosTok
 dummyPosTok t = PT t (newPos "DUMMY" 0 0)
+
+varVal :: PosTok -> String
+varVal (PT (Var name) _) = name
+
+boolVal :: PosTok -> Bool
+boolVal (PT (BoolTok b) _) = b
+
+floatVal :: PosTok -> Float
+floatVal (PT (FloatTok f) _) = f
+
+intVal :: PosTok -> Int
+intVal (PT (IntTok n) _) = n
 
 instance Eq PosTok where
 	(==) = ptEq
@@ -65,8 +77,21 @@ isVarTok _ = False
 isIntTok (IntTok _) = True
 isIntTok _ = False
 
+isFloatTok (FloatTok _) = True
+isFloatTok _ = False
+
+isCharTok (CharTok _) = True
+isCharTok _ = False
+
 isBoolTok (BoolTok _) = True
 isBoolTok _ = False
+
+infixOperator (Var name) = if elem name infixOps
+	then True
+	else False
+infixOperator _ = False
+
+infixOps = ["+", "*", "/", "==", ">=", "<=", ">", "<", "&&", "||"]
 
 resToTok =
 	[("let", LET), ("=", EQUAL), ("def", DEF), ("in", IN), ("if", IF)

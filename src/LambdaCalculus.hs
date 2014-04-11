@@ -1,5 +1,6 @@
 module LambdaCalculus(
-	var, int, bool, float, char, ap, ab, i, k, s,
+	Term, var, int, bool, float, char, ap, ab, i, k, s,
+	makeIf, makeLet,
 	toSKI) where
 
 data Term
@@ -54,6 +55,12 @@ k = Var "K"
 
 s :: Term
 s = Var "S"
+
+makeIf :: Term -> Term -> Term -> Term
+makeIf cond e1 e2 = ap (ap (ap (var "if") cond) e1) e2
+
+makeLet :: Term -> Term -> Term -> Term
+makeLet var sub e = ap (ab var e) sub
 
 toSKI :: Term -> Term
 toSKI (Abs var t) = abConv var (toSKI t)
