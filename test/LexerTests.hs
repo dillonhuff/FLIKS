@@ -36,7 +36,12 @@ tests = TestList
 	,lexer_gt
 	,lexer_not
 	,lexer_and
-	,lexer_or]
+	,lexer_or
+	,lexer_char
+	,lexer_floatNoExp
+	,lexer_leadZeros
+	,lexer_expFloat
+	,lexer_negExpFloat]
 
 lexer_Number =
 	tokenTest "1239" [(IntTok 1239)]
@@ -124,6 +129,21 @@ lexer_and =
 
 lexer_or =
 	tokenTest "||" [(Var "||")]
+
+lexer_char =
+	tokenTest "'c'" [(CharTok 'c')]
+
+lexer_floatNoExp =
+	tokenTest "3.120" [(FloatTok 3.120)]
+
+lexer_leadZeros =
+	tokenTest "000000.00312" [(FloatTok 0.00312)]
+
+lexer_expFloat =
+	tokenTest "12.223e23" [(FloatTok 12.223e23)]
+
+lexer_negExpFloat =
+	tokenTest "000.0125e-2" [(FloatTok 0.000125)]
 
 tokenTest input expected = TestCase
 	(assertEqual ("Input: " ++ show input)

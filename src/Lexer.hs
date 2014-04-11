@@ -2,9 +2,9 @@ module Lexer(
 	PosTok(PT), tok, pos, dummyPosTok,
 	num, bool,
 	lexer,
-	Tok(Var, IntTok, BoolTok, DEF, LET, EQUAL,
+	Tok(Var, IntTok, BoolTok, FloatTok, DEF, LET, EQUAL,
 		IN, IF, THEN, ELSE, NIL, LPAREN,
-		RPAREN, LAMBDA, DOT),
+		RPAREN, LAMBDA, DOT, CharTok),
 	isIntTok, isVarTok, isBoolTok) where
 
 import ErrorHandling
@@ -36,7 +36,9 @@ ptEq (PT t1 _) (PT t2 _) = t1 == t2
 data Tok
 	= Var String
 	| IntTok Int
+	| FloatTok Float
 	| BoolTok Bool
+	| CharTok Char
 	| DEF
 	| LET
 	| EQUAL
@@ -82,24 +84,48 @@ pToks = do
 	return ts
 
 pTok = do
-	t <- pIntTok
+	pos <- getPosition
+	t <- pCharTok
+		<|> pNumTok
 		<|> pVarOrRes
 		<|> pBool
-	return t
+	return $ PT t pos
+
+pCharTok = do
+	start <- char '\''
+	character <- anyChar
+	end <- char '\''
+	return $ CharTok character
+
+pNumTok = do
+	num <- try pFloatTok
+		<|> pIntTok
+	return num
+
+pFloatTok = do
+	leading <- many1 digit
+	dot <- char '.'
+	trailing <- many1 digit
+	power <- option "" pExponent
+	return $ FloatTok (read (leading ++ [dot] ++ trailing ++ power))
+
+pExponent = do
+	e <- oneOf "eE"
+	sign <- option "" (string "-")
+	pow <- many1 digit
+	return (e:sign ++ pow)
 
 pIntTok = do
-	pos <- getPosition
 	digs <- many1 digit
-	return $ PT (IntTok $ read digs) pos
+	return $ IntTok $ read digs
 
 pVarOrRes = do
-	pos <- getPosition
 	idOrRes <- pId
 		<|> try pOp
 		<|> pResName
 	return $ case lookup idOrRes resToTok of
-		Just t -> PT t pos
-		Nothing -> PT (Var idOrRes) pos
+		Just t -> t
+		Nothing -> Var idOrRes
 
 pId = do
 	startChar <- lower
@@ -136,11 +162,9 @@ pBool = do
 	return b
 
 pTrue = do
-	pos <- getPosition
 	val <- string "True"
-	return $ PT (BoolTok True) pos
+	return $ BoolTok True
 
 pFalse = do
-	pos <- getPosition
 	val <- string "False"
-	return $ PT (BoolTok False) pos
+	return $ BoolTok False
