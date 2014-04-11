@@ -39,16 +39,16 @@ tests = TestList
 	,lexer_or]
 
 lexer_Number =
-	tokenTest "1239" [(Num 1239)]
+	tokenTest "1239" [(IntTok 1239)]
 
 lexer_Id =
-	tokenTest "a" [(I "a")]
+	tokenTest "a" [(Var "a")]
 
 lexer_True =
-	tokenTest "True" [(Boolean True)]
+	tokenTest "True" [(BoolTok True)]
 
 lexer_False =
-	tokenTest "False" [(Boolean False)]
+	tokenTest "False" [(BoolTok False)]
 
 lexer_let =
 	tokenTest "let" [LET]
@@ -87,43 +87,43 @@ lexer_def =
 	tokenTest "def" [DEF]
 
 lexer_overlapResAndId =
-	tokenTest "letter" [(I "letter")]
+	tokenTest "letter" [(Var "letter")]
 
 lexer_plus =
-	tokenTest "+" [(Op "+")]
+	tokenTest "+" [(Var "+")]
 
 lexer_minus =
-	tokenTest "-" [(Op "-")]
+	tokenTest "-" [(Var "-")]
 
 lexer_times =
-	tokenTest "*" [(Op "*")]
+	tokenTest "*" [(Var "*")]
 
 lexer_divide =
-	tokenTest "/" [(Op "/")]
+	tokenTest "/" [(Var "/")]
 
 lexer_eqeq =
-	tokenTest "==" [(Op "==")]
+	tokenTest "==" [(Var "==")]
 
 lexer_lte =
-	tokenTest "<=" [(Op "<=")]
+	tokenTest "<=" [(Var "<=")]
 
 lexer_gte =
-	tokenTest ">=" [(Op ">=")]
+	tokenTest ">=" [(Var ">=")]
 
 lexer_lt =
-	tokenTest "<" [(Op "<")]
+	tokenTest "<" [(Var "<")]
 
 lexer_gt =
-	tokenTest ">" [(Op ">")]
+	tokenTest ">" [(Var ">")]
 
 lexer_not =
-	tokenTest "~" [(Op "~")]
+	tokenTest "~" [(Var "~")]
 
 lexer_and =
-	tokenTest "&&" [(Op "&&")]
+	tokenTest "&&" [(Var "&&")]
 
 lexer_or =
-	tokenTest "||" [(Op "||")]
+	tokenTest "||" [(Var "||")]
 
 tokenTest input expected = TestCase
 	(assertEqual ("Input: " ++ show input)

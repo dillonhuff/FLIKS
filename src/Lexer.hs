@@ -2,10 +2,10 @@ module Lexer(
 	PosTok(PT), tok, pos, dummyPosTok,
 	num, bool,
 	lexer,
-	Tok(I, Num, Op, Boolean, DEF, LET, EQUAL,
+	Tok(Var, IntTok, BoolTok, DEF, LET, EQUAL,
 		IN, IF, THEN, ELSE, NIL, LPAREN,
 		RPAREN, LAMBDA, DOT),
-	isOpTok, isNumTok, isIdTok, isBoolTok) where
+	isIntTok, isVarTok, isBoolTok) where
 
 import ErrorHandling
 import Text.Parsec.Pos
@@ -34,10 +34,9 @@ instance Eq PosTok where
 ptEq (PT t1 _) (PT t2 _) = t1 == t2
 
 data Tok
-	= I String
-	| Op String
-	| Num Int
-	| Boolean Bool
+	= Var String
+	| IntTok Int
+	| BoolTok Bool
 	| DEF
 	| LET
 	| EQUAL
@@ -52,22 +51,19 @@ data Tok
 	| DOT
 	deriving (Eq, Show)
 
-num (Num n) = n
+num (IntTok n) = n
 num t = error $ show t ++ " is not a number"
 
-bool (Boolean b) = b
+bool (BoolTok b) = b
 bool t = error $ show t ++ " is not a boolean"
 
-isOpTok (Op _) = True
-isOpTok _ = False
+isVarTok (Var _) = True
+isVarTok _ = False
 
-isIdTok (I _) = True
-isIdTok _ = False
+isIntTok (IntTok _) = True
+isIntTok _ = False
 
-isNumTok (Num _) = True
-isNumTok _ = False
-
-isBoolTok (Boolean _) = True
+isBoolTok (BoolTok _) = True
 isBoolTok _ = False
 
 resToTok =
@@ -86,19 +82,31 @@ pToks = do
 	return ts
 
 pTok = do
-	t <- pNum
-		<|> try pOp
-		<|> pIdentOrRes
+	t <- pIntTok
+		<|> pVarOrRes
 		<|> pBool
 	return t
 
-pNum = do
+pIntTok = do
 	pos <- getPosition
 	digs <- many1 digit
-	return $ PT (Num $ read digs) pos
+	return $ PT (IntTok $ read digs) pos
+
+pVarOrRes = do
+	pos <- getPosition
+	idOrRes <- pId
+		<|> try pOp
+		<|> pResName
+	return $ case lookup idOrRes resToTok of
+		Just t -> PT t pos
+		Nothing -> PT (Var idOrRes) pos
+
+pId = do
+	startChar <- lower
+	rest <- many alphaNum
+	return (startChar:rest)
 
 pOp = do
-	pos <- getPosition
 	op <- string "+"
 		<|> string "-"
 		<|> string "*"
@@ -111,20 +119,7 @@ pOp = do
 		<|> string "~"
 		<|> string "&&"
 		<|> string "||"
-	return $ PT (Op op) pos
-
-pIdentOrRes = do
-	pos <- getPosition
-	idOrRes <- pId
-		<|> pResName
-	return $ case lookup idOrRes resToTok of
-		Just t -> PT t pos
-		Nothing -> PT (I idOrRes) pos
-
-pId = do
-	startChar <- lower
-	rest <- many alphaNum
-	return (startChar:rest)
+	return op
 
 pResName = do
 	rName <- string "="
@@ -143,9 +138,9 @@ pBool = do
 pTrue = do
 	pos <- getPosition
 	val <- string "True"
-	return $ PT (Boolean True) pos
+	return $ PT (BoolTok True) pos
 
 pFalse = do
 	pos <- getPosition
 	val <- string "False"
-	return $ PT (Boolean False) pos
+	return $ PT (BoolTok False) pos
