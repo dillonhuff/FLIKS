@@ -1,3 +1,7 @@
 module Main(main) where
 
-main = putStrLn "No code yet"
+import LambdaCalculusTests
+
+main = do
+	allLambdaCalculusTests
+
