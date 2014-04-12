@@ -31,7 +31,7 @@ parseToks toks = case parse pExpr "Parser" toks of
 		Right expr -> Succeeded expr
 
 createDef :: [Term] -> Term -> (Term, Term)
-createDef header body = (head header, wrapLambdas (tail header) body)
+createDef header body = (head header, wrapLambdas (reverse $ tail header) body)
 
 wrapLambdas :: [Term] -> Term -> Term
 wrapLambdas [] t = t
