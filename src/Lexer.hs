@@ -3,7 +3,8 @@ module Lexer(
 	varVal, boolVal, floatVal, intVal, charVal, isOperator,
 	lexer,
 	isIntTok, isVarTok, isBoolTok, isFloatTok, isCharTok,
-	Tok(Var, IntTok, BoolTok, FloatTok, DEF, LET, EQUAL,
+	Tok(Var, IntTok, BoolTok, FloatTok, CASE, OF, DATA,
+		DEF, LET, EQUAL, BAR, ARROW,
 		IN, IF, THEN, ELSE, NIL, LPAREN,
 		RPAREN, LAMBDA, DOT, CharTok)) where
 
@@ -54,7 +55,12 @@ data Tok
 	| FloatTok Float
 	| BoolTok Bool
 	| CharTok Char
+	| ARROW
+	| BAR
+	| DATA
 	| DEF
+	| CASE
+	| OF
 	| LET
 	| EQUAL
 	| IN
@@ -97,9 +103,10 @@ isOperator _ = False
 operators = ["+", "*", "/", "-", "==", ">=", "<=", ">", "<", "&&", "||"]
 
 resToTok =
-	[("let", LET), ("=", EQUAL), ("def", DEF), ("in", IN), ("if", IF)
+	[("let", LET), ("=", EQUAL), ("case", CASE), ("of", OF)
+	,("data", DATA), ("def", DEF), ("in", IN), ("if", IF), ("->", ARROW)
 	,("then", THEN), ("else", ELSE), ("nil", NIL), ("(", LPAREN)
-	,(")", RPAREN), ("\\", LAMBDA), (".", DOT)]
+	,(")", RPAREN), ("\\", LAMBDA), (".", DOT), ("|", BAR)]
 
 lexer :: String -> Error [PosTok]
 lexer str = case parse pToks "TFL" str of
@@ -169,6 +176,7 @@ pId = do
 
 pOp = do
 	op <- string "+"
+		<|> try (string "->")
 		<|> string "-"
 		<|> string "*"
 		<|> string "/"
@@ -189,6 +197,7 @@ pResName = do
 		<|> string "("
 		<|> string ")"
 		<|> string ";"
+		<|> string "|"
 	return rName
 
 pBool = do

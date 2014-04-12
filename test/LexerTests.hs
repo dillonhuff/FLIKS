@@ -12,6 +12,9 @@ tests = TestList
 	,lexer_Id
 	,lexer_True
 	,lexer_False
+	,lexer_case
+	,lexer_of
+	,lexer_data
 	,lexer_def
 	,lexer_let
 	,lexer_equal
@@ -20,6 +23,9 @@ tests = TestList
 	,lexer_then
 	,lexer_else
 	,lexer_nil
+	,lexer_bar
+	,lexer_arrow
+	,lexer_minusGT
 	,lexer_lparen
 	,lexer_rparen
 	,lexer_lambda
@@ -37,6 +43,7 @@ tests = TestList
 	,lexer_not
 	,lexer_and
 	,lexer_or
+	,lexer_orBar
 	,lexer_char
 	,lexer_floatNoExp
 	,lexer_leadZeros
@@ -56,6 +63,12 @@ lexer_True =
 lexer_False =
 	tokenTest "False" [(BoolTok False)]
 
+lexer_case =
+	tokenTest "case" [CASE]
+
+lexer_of =
+	tokenTest "of" [OF]
+
 lexer_let =
 	tokenTest "let" [LET]
 
@@ -74,6 +87,15 @@ lexer_then =
 lexer_else =
 	tokenTest "else" [ELSE]
 
+lexer_bar =
+	tokenTest "|" [BAR]
+
+lexer_arrow =
+	tokenTest "->" [ARROW]
+
+lexer_minusGT =
+	tokenTest "- >" [(Var "-"), (Var ">")]
+
 lexer_nil =
 	tokenTest "nil" [NIL]
 
@@ -85,6 +107,9 @@ lexer_rparen =
 
 lexer_lambda =
 	tokenTest "\\" [LAMBDA]
+
+lexer_data =
+	tokenTest "data" [DATA]
 
 lexer_dot =
 	tokenTest "." [DOT]
@@ -130,6 +155,9 @@ lexer_and =
 
 lexer_or =
 	tokenTest "||" [(Var "||")]
+
+lexer_orBar =
+	tokenTest "|| |" [(Var "||"), BAR]
 
 lexer_char =
 	tokenTest "'c'" [(CharTok 'c')]
