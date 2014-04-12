@@ -15,15 +15,26 @@ tests = TestList
 	,parseExpr_plus
 	,parseExpr_minus
 	,parseExpr_doubleMinus
+	,parseExpr_divide
+	,parseExpr_multiply
 	,parseExpr_integer
 	,parseExpr_BoolExprTrue
 	,parseExpr_BoolExprFalse
 	,parseExpr_parenExpr
 	,parseExpr_absExpr
+	,parseExpr_gte
+	,parseExpr_lte
+	,parseExpr_gt
+	,parseExpr_lt
+	,parseExpr_eq
+	,parseExpr_and
+	,parseExpr_or
 	,parseExpr_apExpr
 	,parseExpr_multiApExpr
 	,parseExpr_ifExpr
-	,parseExpr_letExpr]
+	,parseExpr_letExpr
+	,parseProgram_tiny
+	,parseProgram_oneArg]
 
 parseExpr_var =
 	parseExprTest "n12" (var "n12")
@@ -42,6 +53,39 @@ parseExpr_minus =
 
 parseExpr_doubleMinus =
 	parseExprTest "45e2 - -1" (ap (ap (var "-") (float 45e2)) (ap (var "-") (int 1)))
+
+parseExpr_divide =
+	parseExprTest "23.2/1.9e3" (ap (ap (var "/") (float 23.2)) (float 1.9e3))
+
+parseExpr_multiply =
+	parseExprTest "652e2 * 2" (ap (ap (var "*") (float 652e2)) (int 2))
+
+parseExpr_gte =
+	parseExprTest "5 >= 9" (ap (ap (var ">=") (int 5)) (int 9))
+
+parseExpr_lte =
+	parseExprTest "5 <= 9" (ap (ap (var "<=") (int 5)) (int 9))
+
+parseExpr_gt =
+	parseExprTest "5 > 9" (ap (ap (var ">") (int 5)) (int 9))
+
+parseExpr_lt =
+	parseExprTest "5 < 9" (ap (ap (var "<") (int 5)) (int 9))
+
+parseExpr_eq =
+	parseExprTest "5 == 9" (ap (ap (var "==") (int 5)) (int 9))
+
+parseExpr_and =
+	parseExprTest "True && (1 + 2)"
+		(ap
+			(ap (var "&&") (bool True))
+			(ap (ap (var "+") (int 1)) (int 2)))
+
+parseExpr_or =
+	parseExprTest "True || (1 - -2.23e38)"
+		(ap
+			(ap (var "||") (bool True))
+			(ap (ap (var "-") (int 1)) (ap (var "-") (float 2.23e38))))
 
 parseExpr_integer = parseExprTest "58263" (int 58263)
 
@@ -73,13 +117,25 @@ parseExpr_ifExpr =
 			(ap (var "-") (int 1)))
 
 parseExpr_letExpr =
-	parseExprTest "let x = 34 in (\\y. (x + 2) y)"
+	parseExprTest "let x = -34 in (\\y. (x + 2) y)"
 			(ap (ab (var "x")
 				(ab (var "y")
 					(ap (ap (ap (var "+") (var "x")) (int 2)) (var "y"))))
-						(int 34))
+						(ap (var "-") (int 34)))
 
-parseExprTest input expected = TestCase
+parseExprTest input expected = functionTest parseExpr input expected
+
+parseProgram_tiny =
+	parseProgramTest "def prog = 12"
+		[(var "prog", int 12)]
+
+parseProgram_oneArg =
+	parseProgramTest "def prog x = 45.5"
+		[(var "prog", ab (var "x") (float 45.5))]
+
+parseProgramTest input expected = functionTest parseProgram input expected
+
+functionTest func input expected = TestCase
 	(assertEqual ("Input: " ++ show input)
 		expected
-		(extractValue $ parseExpr input))
+		(extractValue $ func input))

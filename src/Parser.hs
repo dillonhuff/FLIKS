@@ -1,4 +1,5 @@
  module Parser(
+ 	parseProgram,
  	parseExpr) where
 
 import ErrorHandling
@@ -7,18 +8,50 @@ import Lexer
 import Text.Parsec
 import Text.Parsec.Expr
 
+-- A program is a list of terms synonyms with distinguished
+-- synonym prog
+type Program = [(Term, Term)]
+
+parseProgram :: String -> Error Program
+parseProgram program = (lexer program) >>= parseProgToks
+
+parseProgToks :: [PosTok] -> Error Program
+parseProgToks toks = case parse pProgram "Parser" toks of
+	Left err -> Failed $ show err
+	Right prog -> case lookup (var "prog") prog of
+		Just def -> Succeeded prog
+		Nothing -> Failed $ "Error: Program has no function named prog"
+
 parseExpr :: String -> Error Term
-parseExpr programText = (lexer programText) >>= parseToks
+parseExpr exprText = (lexer exprText) >>= parseToks
 
 parseToks :: [PosTok] -> Error Term
 parseToks toks = case parse pExpr "Parser" toks of
 		Left err -> Failed $ show err
 		Right expr -> Succeeded expr
 
+createDef :: [Term] -> Term -> (Term, Term)
+createDef header body = (head header, wrapLambdas (tail header) body)
+
+wrapLambdas :: [Term] -> Term -> Term
+wrapLambdas [] t = t
+wrapLambdas (v:vs) t = wrapLambdas vs (ab v t)
+
+pProgram = do
+	exprDefs <- many1 pExprDef
+	return $ exprDefs
+
+pExprDef = do
+	fliksTok DEF
+	header <- many1 pVar
+	fliksTok EQUAL
+	body <- pExpr
+	return $ createDef header body
+
 pParens toParse = do
-	flikTok LPAREN
+	fliksTok LPAREN
 	v <- toParse
-	flikTok RPAREN
+	fliksTok RPAREN
 	return v
 
 pExpr = do
@@ -58,27 +91,27 @@ pChar = do
 	return $ LambdaCalculus.char $ charVal val
 
 pAbsExpr = do
-	flikTok LAMBDA
+	fliksTok LAMBDA
 	v <- pVar
-	flikTok DOT
+	fliksTok DOT
 	expr <- pExpr
 	return $ ab v expr
 
 pIfExpr = do
-	flikTok IF
+	fliksTok IF
 	cond <- pExpr
-	flikTok THEN
+	fliksTok THEN
 	e1 <- pExpr
-	flikTok ELSE
+	fliksTok ELSE
 	e2 <- pExpr
 	return $ makeIf cond e1 e2
 
 pLetExpr = do
-	flikTok LET
+	fliksTok LET
 	var <- pVar
-	flikTok EQUAL
+	fliksTok EQUAL
 	sub <- pExpr
-	flikTok IN
+	fliksTok IN
 	e <- pExpr
 	return $ makeLet var sub e
 
@@ -93,36 +126,30 @@ term = pParens pExpr
 	<|> pVar
 
 table =
-	[[Prefix doNegate, Prefix doLogicalNot]
-	,[Infix doPlus AssocLeft, Infix doMinus AssocLeft]]
+	[[prefixOp "-", prefixOp "~"]
+	,[infixOp "*", infixOp "/"]
+	,[infixOp "+", infixOp "-"]
+	,[infixOp ">", infixOp "<", infixOp ">=", infixOp "<="]
+	,[infixOp "=="]
+	,[infixOp "&&"]
+	,[infixOp "||"]]
 
-doNegate = do
-	neg <- flikTok (Var "-")
-	return $ negateTerm
+prefixOp opStr = Prefix $ doUnoperator opStr
+infixOp opStr = Infix (doBinop opStr) AssocLeft
 
-doLogicalNot = do
-	logNot <- flikTok (Var "~")
-	return $ logicalNegateTerm
+doUnoperator opStr = do
+	opVal <- fliksTok (Var opStr)
+	return $ unop (var opStr)
 
-doPlus = do
-	plusOp <- flikTok (Var "+")
-	return $ plusTerms
+doBinop opStr = do
+	opVal <- fliksTok (Var opStr)
+	return $ binop (var opStr)
 
-doMinus = do
-	plusOp <- flikTok (Var "-")
-	return $ minusTerms
+unop :: Term -> Term -> Term
+unop un t = ap un t
 
-negateTerm :: Term -> Term
-negateTerm t = ap (var "-") t
-
-logicalNegateTerm :: Term -> Term
-logicalNegateTerm t = ap (var "~") t
-
-plusTerms :: Term -> Term -> Term
-plusTerms t1 t2 = ap (ap (var "+") t1) t2
-
-minusTerms :: Term -> Term -> Term
-minusTerms t1 t2 = ap (ap (var "-") t1) t2
+binop :: Term -> Term -> Term -> Term
+binop bop t1 t2 = ap (ap (bop) t1) t2
 
 multiExpr :: [Term] -> Term
 multiExpr [] = error "No expressions in input"
@@ -152,8 +179,8 @@ tokOfType isTokOfType = tokenPrim show updatePos idTok
 	where
 		idTok pt = if isTokOfType (tok pt) then Just pt else Nothing
 
-flikTok :: (Monad m) => Tok -> ParsecT [PosTok] u m PosTok
-flikTok x = tokenPrim show updatePos testTok
+fliksTok :: (Monad m) => Tok -> ParsecT [PosTok] u m PosTok
+fliksTok x = tokenPrim show updatePos testTok
 	where
 		testTok pt = if (tok pt) == x then Just pt else Nothing
 

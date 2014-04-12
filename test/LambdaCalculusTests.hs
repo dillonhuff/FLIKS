@@ -15,7 +15,8 @@ tests = TestList
 	,toSKI_constAp
 	,toSKI_abs
 	,toSKI_absK
-	,toSKI_absAp]
+	,toSKI_absAp
+	,toSKI_apWithAbs]
 
 toSKI_var = toSKITest (var "x") (var "x")
 
@@ -42,6 +43,14 @@ toSKI_absAp = toSKITest
 		(ap (ap (var "+") (var "var")) (int 4)))
 	(ap (ap s (ap (ap s (ap k (var "+"))) i))
 		(ap k (int 4)))
+
+toSKI_apWithAbs = toSKITest
+	(ap 
+		(float 5.0)
+		(ab (var "avg") (ap (var "-") (var "avg"))))
+	(ap
+		(float 5.0)
+		(ap (ap s (ap k (var "-"))) i))
 
 toSKITest input expected = TestCase
 	(assertEqual ("Input: " ++ show input)

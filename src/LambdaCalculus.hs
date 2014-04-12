@@ -63,6 +63,7 @@ makeLet :: Term -> Term -> Term -> Term
 makeLet var sub e = ap (ab var e) sub
 
 toSKI :: Term -> Term
+toSKI (Ap t1 t2) = ap (toSKI t1) (toSKI t2)
 toSKI (Abs var t) = abConv var (toSKI t)
 toSKI t = t
 
