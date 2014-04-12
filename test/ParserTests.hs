@@ -34,7 +34,8 @@ tests = TestList
 	,parseExpr_ifExpr
 	,parseExpr_letExpr
 	,parseProgram_tiny
-	,parseProgram_oneArg]
+	,parseProgram_oneArg
+	,parseProgram_manyDefs]
 
 parseExpr_var =
 	parseExprTest "n12" (var "n12")
@@ -132,6 +133,16 @@ parseProgram_tiny =
 parseProgram_oneArg =
 	parseProgramTest "def prog x = 45.5"
 		[(var "prog", ab (var "x") (float 45.5))]
+
+parseProgram_manyDefs =
+	parseProgramTest
+		"def square x = x * x def no a b c = if a then b else c def prog = no True (square 1) (square 2)"
+		[(var "square", ab (var "x") (ap (ap (var "*") (var "x")) (var "x")))
+		,(var "no",
+			(ab (var "c")
+			(ab (var "b")
+			(ab (var "a") (ap (ap (ap (var "if") (var "a")) (var "b")) (var "c"))))))
+		,(var "prog", ap (ap (ap (var "no") (bool True)) (ap (var "square") (int 1))) (ap (var "square") (int 2)))]
 
 parseProgramTest input expected = functionTest parseProgram input expected
 
