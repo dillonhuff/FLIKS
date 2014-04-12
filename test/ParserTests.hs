@@ -10,7 +10,11 @@ allParserTests = runTestTT tests
 
 tests = TestList
 	[parseExpr_var
+	,parseExpr_negate
+	,parseExpr_logNeg
 	,parseExpr_plus
+	,parseExpr_minus
+	,parseExpr_doubleMinus
 	,parseExpr_integer
 	,parseExpr_BoolExprTrue
 	,parseExpr_BoolExprFalse
@@ -24,8 +28,20 @@ tests = TestList
 parseExpr_var =
 	parseExprTest "n12" (var "n12")
 
+parseExpr_negate =
+	parseExprTest "- 12" (ap (var "-") (int 12))
+
+parseExpr_logNeg =
+	parseExprTest "~True" (ap (var "~") (bool True))
+
 parseExpr_plus =
 	parseExprTest "1 + 2" (ap (ap (var "+") (int 1)) (int 2))
+
+parseExpr_minus =
+	parseExprTest "45 - 4.5" (ap (ap (var "-") (int 45)) (float 4.5))
+
+parseExpr_doubleMinus =
+	parseExprTest "45e2 - -1" (ap (ap (var "-") (float 45e2)) (ap (var "-") (int 1)))
 
 parseExpr_integer = parseExprTest "58263" (int 58263)
 

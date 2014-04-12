@@ -9,6 +9,12 @@ instance Monad Error where
 	(Succeeded a) >>= f = f a
 	(Failed errMsg) >>= f = (Failed errMsg)
 
+instance Show (Error a) where
+	show = showError
+
+showError (Succeeded _) = "Success!"
+showError (Failed errMsg) = errMsg
+
 extractValue :: Error a -> a
 extractValue (Succeeded val) = val
 extractValue (Failed errMsg) = error $ "Computation Failed: " ++ errMsg

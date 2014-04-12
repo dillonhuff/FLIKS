@@ -41,7 +41,8 @@ tests = TestList
 	,lexer_floatNoExp
 	,lexer_leadZeros
 	,lexer_expFloat
-	,lexer_negExpFloat]
+	,lexer_negExpFloat
+	,lexer_floatENodDecimal]
 
 lexer_Number =
 	tokenTest "1239" [(IntTok 1239)]
@@ -144,6 +145,9 @@ lexer_expFloat =
 
 lexer_negExpFloat =
 	tokenTest "000.0125e-2" [(FloatTok 0.000125)]
+
+lexer_floatENodDecimal =
+	tokenTest "233e2" [(FloatTok 233e2)]
 
 tokenTest input expected = TestCase
 	(assertEqual ("Input: " ++ show input)

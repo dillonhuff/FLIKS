@@ -1,6 +1,6 @@
 module Lexer(
 	PosTok(PT), tok, pos, dummyPosTok,
-	varVal, boolVal, floatVal, intVal, infixOperator,
+	varVal, boolVal, floatVal, intVal, charVal, isOperator,
 	lexer,
 	isIntTok, isVarTok, isBoolTok, isFloatTok, isCharTok,
 	Tok(Var, IntTok, BoolTok, FloatTok, DEF, LET, EQUAL,
@@ -39,6 +39,9 @@ floatVal (PT (FloatTok f) _) = f
 
 intVal :: PosTok -> Int
 intVal (PT (IntTok n) _) = n
+
+charVal :: PosTok -> Char
+charVal (PT (CharTok c) _) = c
 
 instance Eq PosTok where
 	(==) = ptEq
@@ -86,12 +89,12 @@ isCharTok _ = False
 isBoolTok (BoolTok _) = True
 isBoolTok _ = False
 
-infixOperator (Var name) = if elem name infixOps
+isOperator (Var name) = if elem name operators
 	then True
 	else False
-infixOperator _ = False
+isOperator _ = False
 
-infixOps = ["+", "*", "/", "==", ">=", "<=", ">", "<", "&&", "||"]
+operators = ["+", "*", "/", "-", "==", ">=", "<=", ">", "<", "&&", "||"]
 
 resToTok =
 	[("let", LET), ("=", EQUAL), ("def", DEF), ("in", IN), ("if", IF)
@@ -127,7 +130,14 @@ pNumTok = do
 		<|> pIntTok
 	return num
 
-pFloatTok = do
+pFloatTok = try pFloatDecimal <|> pFloatNoDecimal
+
+pFloatNoDecimal = do
+	leading <- many1 digit
+	power <- pExponent
+	return $ FloatTok (read (leading ++ power))
+
+pFloatDecimal = do
 	leading <- many1 digit
 	dot <- char '.'
 	trailing <- many1 digit
